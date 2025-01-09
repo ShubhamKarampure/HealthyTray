@@ -7,8 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  Manager
+  Pantry
+  Delivery
+}
+
 model User {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
-  email    String @unique
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  email    String   @unique
   password String
+  role     Role
+}
+
+model Patient {
+  id               String @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  diseases         String
+  allergies        String
+  roomNumber       String
+  bedNumber        String
+  floorNumber      Int
+  age              Int
+  gender           String
+  contactInfo      String
+  emergencyContact String
+  additionalInfo   String?
 }

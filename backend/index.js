@@ -1,38 +1,17 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
+const cors = require('cors');
 const dotenv = require('dotenv');
-
 dotenv.config();
-const app = express();
-const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3000;
 
+const authRoutes = require('./routes/authRoutes');
+const patientRoutes = require('./routes/patientRoutes');
+
+const app = express();
+app.use(cors());
 app.use(express.json());
 
-// Create a new user
-app.post('/users', async (req, res) => {
-  const { email, password } = req.body;
+app.use('/auth', authRoutes);
+app.use('/patients', patientRoutes);
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-      },
-    });
-
-    res.status(201).json({ message: 'User created', user });
-  } catch (error) {
-    res.status(500).json({ error: 'User creation failed', details: error.message });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
