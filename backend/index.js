@@ -20,7 +20,7 @@ const corsOptions = {
 app.use(cors(corsOptions)); // Apply CORS middleware before route definitions
 app.use(express.json());
 
-app.use('/api/auth', cors(corsOptions),authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/meals', mealRoutes);
 
