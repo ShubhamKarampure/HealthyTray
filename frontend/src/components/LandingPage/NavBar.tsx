@@ -1,10 +1,10 @@
 import React from 'react';
 
-interface HomeNavbarProps {
+interface NavbarProps {
   onLoginOpen: () => void;
 }
 
-const HomeNavbar: React.FC<HomeNavbarProps> = ({ onLoginOpen }) => {
+const Navbar: React.FC<NavbarProps> = ({ onLoginOpen }) => {
  
   // Handle login click
   const handleLoginClick = () => {
@@ -16,7 +16,7 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ onLoginOpen }) => {
       <nav className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="text-xl font-semibold text-gray-700">
-            Hospital Food Delivery
+            NutriTray
           </div>
           <div className="hidden md:flex items-center space-x-4">
             <a href="#" className="text-gray-600 hover:text-blue-500">Home</a>
@@ -33,5 +33,5 @@ const HomeNavbar: React.FC<HomeNavbarProps> = ({ onLoginOpen }) => {
   );
 };
 
-export default HomeNavbar;
+export default Navbar;
 

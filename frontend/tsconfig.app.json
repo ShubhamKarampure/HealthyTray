@@ -8,7 +8,10 @@
     "skipLibCheck": true,
     "allowJs": true,
     "checkJs": false,
-
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
