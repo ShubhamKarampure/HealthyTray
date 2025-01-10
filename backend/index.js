@@ -8,7 +8,15 @@ const patientRoutes = require('./routes/patientRoutes');
 const mealRoutes = require('./routes/mealRoutes');
 
 const app = express();
-app.use(cors());
+
+// Allow localhost and the production Vercel domain
+const corsOptions = {
+  origin: ['http://localhost:3000', 'https://healthy-tray.vercel.app'], 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+  allowedHeaders: ['Content-Type', 'Authorization'], 
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
