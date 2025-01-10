@@ -11,7 +11,7 @@ const app = express();
 
 // Allow localhost and the production Vercel domain
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://healthy-tray.vercel.app'], 
+  origin: ['http://localhost:5173', 'https://healthy-tray.vercel.app'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
   allowedHeaders: ['Content-Type', 'Authorization'], 
 };
@@ -19,9 +19,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-app.use('api/auth', authRoutes);
-app.use('api/patients', patientRoutes);
-app.use('api/meals', mealRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/meals', mealRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
