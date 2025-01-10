@@ -11,7 +11,7 @@ const app = express();
 
 // Updated CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://healthy-tray.vercel.app'],
+  origin: ['http://localhost:5173', 'https://nutritray.onrender.com/'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
