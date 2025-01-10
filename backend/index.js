@@ -9,17 +9,25 @@ const mealRoutes = require('./routes/mealRoutes');
 
 const app = express();
 
-// Allow localhost and the production Vercel domain
+// Updated CORS configuration
 const corsOptions = {
   origin: ['http://localhost:5173', 'https://healthy-tray.vercel.app'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: 'Content-Type,Authorization', // Allow specific headers
-  optionsSuccessStatus: 200, // For legacy browser support
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
-app.use(cors(corsOptions)); // Apply CORS middleware before route definitions
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 
+// Your routes
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/meals', mealRoutes);
