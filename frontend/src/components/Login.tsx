@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { loginUser } from "@/api/authApi";
 
 interface LoginProps {
   isOpen: boolean;
@@ -8,40 +9,38 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ isOpen, onClose }) => {
-  const { login, isAuthenticated,user } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(""); // State to handle error message
   const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthenticated && user) {
+      // Redirect based on role if already logged in
       if (user.role === "Manager") {
-        navigate("home/manager/dashboard");
+        navigate("/home/manager/dashboard");
       } else if (user.role === "Pantry") {
-        navigate("home/pantry/dashboard");
+        navigate("/home/pantry/dashboard");
       } else if (user.role === "Delivery") {
-        navigate("home/delivery/dashboard");
+        navigate("/home/delivery/dashboard");
       }
     }
   }, [isAuthenticated, user, navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError(""); // Reset error on each login attempt
 
-    // Simulate an API call
-    if (email === "user@example.com" && password === "password") {
-      const token = "mock-jwt-token"; // Normally, you would get this token from the server
-
-      // Create a user object (this could come from your API)
-      const user = {
-        id: "12345",
-        name: "John Doe",
-        email: "user@example.com",
-        role: "Manager", // Use Role enum instead of string
-      };
-
+  try {
+    // Directly destructure the response from loginUser
+    const { token, user } = await loginUser(email, password); 
+    
+    if (token && user) {
       login(token, user); // Store token and user in AuthContext and localStorage
       onClose(); // Close the modal
+
+      // Redirect based on role
       if (user.role === "Manager") {
         navigate("/manager/dashboard");
       } else if (user.role === "Pantry") {
@@ -49,19 +48,20 @@ const Login: React.FC<LoginProps> = ({ isOpen, onClose }) => {
       } else if (user.role === "Delivery") {
         navigate("/delivery/dashboard");
       }
-    } else {
-      alert("Invalid credentials");
     }
-  };
+  } catch (error: any) {
+    // Handle error and display error message to the user
+    setError("Invalid credentials. Please try again.");
+  }
+};
+
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
-        <h2 className="text-2xl font-semibold text-blue-600 mb-6 text-center">
-          Login
-        </h2>
+        <h2 className="text-2xl font-semibold text-blue-600 mb-6 text-center">Login</h2>
         <form onSubmit={handleLogin}>
           <div className="mb-6">
             <input
@@ -70,6 +70,7 @@ const Login: React.FC<LoginProps> = ({ isOpen, onClose }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           <div className="mb-6">
@@ -79,8 +80,10 @@ const Login: React.FC<LoginProps> = ({ isOpen, onClose }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>} {/* Display error message */}
           <button
             type="submit"
             className="w-full p-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"

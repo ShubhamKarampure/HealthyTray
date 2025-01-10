@@ -28,10 +28,13 @@ async function login(req, res) {
     if (!isValidPassword) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = generateToken({ id: user.id, role: user.role });
-    res.json({ message: 'Login successful', token });
+
+    // Include the user data in the response
+    res.json({ message: 'Login successful', token, user }); 
   } catch (error) {
     res.status(500).json({ error: 'Login failed', details: error.message });
   }
 }
+
 
 module.exports = { register, login };

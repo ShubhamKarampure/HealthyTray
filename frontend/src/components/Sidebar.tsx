@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation,useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import {
   cn
@@ -50,8 +50,12 @@ const LogoutIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const Sidebar = () => {
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
-
+   const navigate = useNavigate(); 
+  const { user, isAuthenticated, logout } = useAuth();
+const handleLogout = () => {
+    logout();
+    navigate('/login'); // Redirect to login page after logout
+  };
   const menuConfigs = {
     Manager: [
       { path: '/home/manager/dashboard', icon: HomeIcon, label: 'Dashboard' },
@@ -103,13 +107,16 @@ const Sidebar = () => {
 
       {/* User Profile */}
       {isAuthenticated && user && (
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200" >
+          <div onClick={handleLogout}>
+            
         <MenuItem
           icon={LogoutIcon}
           label="Logout"
           path="/logout"
           isActive={false}
-        />
+          />
+          </div>
         </div>
       )}
     </aside>
