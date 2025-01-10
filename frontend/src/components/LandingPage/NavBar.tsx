@@ -1,30 +1,39 @@
 import React from 'react';
+import logo from '@/assets/logo.png';
 
 interface NavbarProps {
   onLoginOpen: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ onLoginOpen }) => {
- 
   // Handle login click
   const handleLoginClick = () => {
-      onLoginOpen();
+    onLoginOpen();
   };
 
   return (
     <header className="bg-white shadow-md">
       <nav className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
-          <div className="text-xl font-semibold text-gray-700">
-            NutriTray
+          {/* Logo and Title */}
+          <div className="flex items-center space-x-2">
+            <img src={logo} alt="Logo" className="w-10 h-10" />
+            <span className="text-xl font-bold text-gray-900">NutriTray</span>
           </div>
-          <div className="hidden md:flex items-center space-x-4">
-            <a href="#" className="text-gray-600 hover:text-blue-500">Home</a>
-            <a href="#" className="text-gray-600 hover:text-blue-500">Features</a>
-            <a href="#" className="text-gray-600 hover:text-blue-500">About</a>
-            <a href="#" className="text-gray-600 hover:text-blue-500">Contact</a>
+
+          {/* Navigation links */}
+          <div className="hidden md:flex items-center space-x-6">
+            <a href="#" className="text-gray-600 hover:text-blue-200">Home</a>
+            <a href="#" className="text-gray-600 hover:text-blue-200">Features</a>
+            <a href="#" className="text-gray-600 hover:text-blue-200">About</a>
+            <a href="#" className="text-gray-600 hover:text-blue-200">Contact</a>
           </div>
-          <button   onClick={handleLoginClick} className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+
+          {/* Login button */}
+          <button
+            onClick={handleLoginClick}
+            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+          >
             Login
           </button>
         </div>
@@ -34,4 +43,3 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginOpen }) => {
 };
 
 export default Navbar;
-
