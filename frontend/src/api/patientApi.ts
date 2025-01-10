@@ -80,12 +80,49 @@ export const createPatient = async (patientData: CreatePatientRequest) => {
     return null;
   }
 };
+interface UpdatePatientRequest {
+  id: string;
+  name: string;
+  age: number;
+  diseases: string;
+  allergies: string;
+  gender: string;
+  contactInfo: string;
+  emergencyContact: string;
+  roomNumber: string;
+  bedNumber: string;
+  floorNumber: number;
+  dietPlans: Array<{
+    id?: string;
+    name: string;
+    description: string;
+    startDate: Date;
+    endDate: Date;
+  }>;
+}
+
 export const updatePatient = async (patientData: UpdatePatientRequest) => {
   try {
     const token = localStorage.getItem("token");
-
+    
     // Destructure and exclude id
     const { id, ...patientWithoutId } = patientData;
+    
+    // Transform diet plans to match Prisma's expected format
+    const formattedData = {
+      ...patientWithoutId,
+      dietPlans: {
+        updateMany: patientWithoutId.dietPlans.map(plan => ({
+          where: { id: plan.id },
+          data: {
+            name: plan.name,
+            description: plan.description,
+            startDate: plan.startDate,
+            endDate: plan.endDate
+          }
+        }))
+      }
+    };
 
     const response = await fetch(
       `${API_ROUTES.PATIENTS}/${id}`,
@@ -95,22 +132,21 @@ export const updatePatient = async (patientData: UpdatePatientRequest) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(patientWithoutId), // Send data without id
+        body: JSON.stringify(formattedData),
       }
     );
-    
-    if (response.ok) {
-      const updatedPatient = await response.json();
-      return updatedPatient;
-    } else {
-      throw new Error("Failed to update patient");
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update patient");
     }
+
+    return await response.json();
   } catch (error) {
-    console.error(error);
-    return null;
+    console.error("Update patient error:", error);
+    throw error; // Re-throw to handle in component
   }
 };
-
 
 export const deletePatient = async (id: string) => {
     try {

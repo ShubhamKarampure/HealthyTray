@@ -75,6 +75,7 @@ const PatientList: React.FC = () => {
     setCurrentPatient(patient);
     setIsModalOpen(true);
   };
+  
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();

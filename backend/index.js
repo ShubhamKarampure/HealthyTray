@@ -11,15 +11,16 @@ const app = express();
 
 // Allow localhost and the production Vercel domain
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://healthy-tray.vercel.app'], 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-  allowedHeaders: ['Content-Type', 'Authorization'], 
+  origin: ['http://localhost:5173', 'https://healthy-tray.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: 'Content-Type,Authorization', // Allow specific headers
+  optionsSuccessStatus: 200, // For legacy browser support
 };
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // Apply CORS middleware before route definitions
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', cors(corsOptions),authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/meals', mealRoutes);
 

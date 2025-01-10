@@ -123,10 +123,39 @@ async function getSinglePatient(req, res) {
 async function updatePatient(req, res) {
   try {
     const { id } = req.params;
-    const patient = await prisma.patient.update({ where: { id }, data: req.body });
-    res.json({ message: 'Patient updated', patient });
+    const updateData = req.body;
+
+    const patient = await prisma.patient.update({
+      where: {
+        id: id
+      },
+      data: {
+        name: updateData.name,
+        age: updateData.age,
+        diseases: updateData.diseases,
+        allergies: updateData.allergies,
+        gender: updateData.gender,
+        contactInfo: updateData.contactInfo,
+        emergencyContact: updateData.emergencyContact,
+        roomNumber: updateData.roomNumber,
+        bedNumber: updateData.bedNumber,
+        floorNumber: updateData.floorNumber,
+        dietPlans: {
+          updateMany: updateData.dietPlans?.updateMany || []
+        }
+      },
+      include: {
+        dietPlans: true
+      }
+    });
+
+    res.json(patient);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update patient', details: error.message });
+    console.error("Update patient error:", error);
+    res.status(500).json({
+      error: "Failed to update patient",
+      details: error.message
+    });
   }
 }
 
