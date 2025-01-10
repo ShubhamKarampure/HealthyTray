@@ -4,12 +4,12 @@ const { generateToken } = require('../utils/jwt');
 const prisma = new PrismaClient();
 
 async function register(req, res) {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role,location,contactInfo } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role },
+      data: { name, email, password: hashedPassword, role,location,contactInfo },
     });
     res.status(201).json({ message: 'User registered', user });
   } catch (error) {

@@ -39,12 +39,12 @@ const managerRoutes = [
     element: <PatientDetails />,
   },
   {
-    path: "/home/manager/meal",
+    path: "/home/manager/meals",
     name: "Meal Management",
     element: < MealManagement/>,
   },
   {
-    path: "/home/manager/meals",
+    path: "/home/manager/meal",
     name: "Patient Meal Tracking",
     element: <PatientMealTracking />,
   }

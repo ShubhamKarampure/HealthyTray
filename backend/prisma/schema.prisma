@@ -7,24 +7,84 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  Manager
+  Pantry
+  Delivery
+}
+
 model User {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
-  name     String
-  email    String @unique
-  password String
-  role     String  
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String       @unique
+  password    String
+  role        Role
+  location    String
+  contactInfo String
+  pantryStaff MealDetail[] @relation("Pantry")  
+  deliveries  MealDetail[] @relation("Delivery")  
 }
 
 model Patient {
-  id               String @id @default(auto()) @map("_id") @db.ObjectId
-  name             String
-  diseases         String
-  allergies        String
+  id                String        @id @default(cuid()) @map("_id")
+  name              String
+  age               Int
+  diseases String
+  allergies String
+  gender            String
+  contactInfo       String
+  emergencyContact  String
   roomNumber       String
   bedNumber        String
-  floorNumber      Int
-  age              Int
-  gender           String
-  contactInfo      String
-  emergencyContact String
+  floorNumber Int
+  dietPlans        DietPlan[]
+}
+
+model DietPlan {
+  id              String      @id @default(cuid()) @map("_id")
+  patientId       String
+  patient         Patient     @relation(fields: [patientId], references: [id])
+  morningMeal     MealDetail @relation("MorningMeal", fields: [morningMealId], references: [id])
+  eveningMeal     MealDetail @relation("EveningMeal", fields: [eveningMealId], references: [id])
+  nightMeal       MealDetail @relation("NightMeal", fields: [nightMealId], references: [id])
+
+  morningMealId   String
+  eveningMealId   String
+  nightMealId     String
+}
+
+model MealDetail {
+  id                  String            @id @default(cuid()) @map("_id")
+  mealType            MealType
+  ingredients         String
+  instructions        String
+  preparationStatus   PreparationStatus @default(Pending)
+  deliveryStatus      DeliveryStatus   @default(Pending)
+  pantryStaffId       String
+  pantryStaff         User              @relation("Pantry", fields: [pantryStaffId], references: [id])
+  deliveryPersonnelId String?
+  deliveryPersonnel   User?             @relation("Delivery", fields: [deliveryPersonnelId], references: [id])
+  deliveredAt         DateTime?
+  deliveryNotes       String?
+
+  dietPlanMorningMeal DietPlan[]        @relation("MorningMeal")
+  dietPlanEveningMeal DietPlan[]        @relation("EveningMeal")
+  dietPlanNightMeal   DietPlan[]        @relation("NightMeal")
+}
+
+enum MealType {
+  Morning
+  Evening
+  Night
+}
+
+enum PreparationStatus {
+  Pending
+  InProgress
+  Completed
+}
+
+enum DeliveryStatus {
+  Pending
+  Delivered
 }

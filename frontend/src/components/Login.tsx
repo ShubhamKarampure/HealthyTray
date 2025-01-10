@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "@/api/authApi";
+import { Role } from "@/utils/types";
 
 interface LoginProps {
   isOpen: boolean;
@@ -18,11 +19,11 @@ const Login: React.FC<LoginProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isAuthenticated && user) {
       // Redirect based on role if already logged in
-      if (user.role === "Manager") {
+      if (user.role === Role.Manager) {
         navigate("/home/manager/dashboard");
-      } else if (user.role === "Pantry") {
+      } else if (user.role === Role.Pantry) {
         navigate("/home/pantry/dashboard");
-      } else if (user.role === "Delivery") {
+      } else if (user.role === Role.Delivery) {
         navigate("/home/delivery/dashboard");
       }
     }

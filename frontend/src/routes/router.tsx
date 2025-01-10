@@ -9,6 +9,7 @@ import {
 } from "@/routes/index";
 import Layout from "@/layouts/Layout";
 import PageNotFound from "@/pages/PageNotFound";
+import { Role } from "@/utils/types";
 
 const AppRouter = () => {
   const { isAuthenticated, user } = useAuth();
@@ -30,7 +31,7 @@ const AppRouter = () => {
           key={idx + route.name}
           path={route.path}
           element={
-            isAuthenticated && user && user.role === "Manager" ? (
+            isAuthenticated && user && user.role === Role.Manager ? (
               <Layout>{route.element}</Layout>
             ) : (
               <Navigate to="/" replace />
@@ -45,7 +46,7 @@ const AppRouter = () => {
           key={idx + route.name}
           path={route.path}
           element={
-            isAuthenticated && user && user.role === "pantry" ? (
+            isAuthenticated && user && user.role === Role.Pantry ? (
               <Layout>{route.element}</Layout>
             ) : (
               <Navigate to="/" replace />
@@ -60,7 +61,7 @@ const AppRouter = () => {
           key={idx + route.name}
           path={route.path}
           element={
-            isAuthenticated && user && user.role === "delivery" ? (
+            isAuthenticated && user && user.role === Role.Delivery ? (
               <Layout>{route.element}</Layout>
             ) : (
               <Navigate to="/" replace />

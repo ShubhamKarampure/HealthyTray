@@ -1,15 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import { FaUserInjured, FaClipboardList, FaExclamationTriangle, FaUserPlus } from 'react-icons/fa';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { getAllPatients } from "@/api/patientApi";
 
 const Dashboard = () => {
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const pantryData = [
     { name: 'Prepared', value: 70 },
     { name: 'Pending', value: 30 },
   ];
   const COLORS = ['#93c5fd', '#bfdbfe'];
-  
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const response = await getAllPatients();
+        if (response) {
+          setPatients(response);
+        }
+      } catch (error) {
+        console.error("Error fetching patients:", error);
+      }
+    };
+    fetchPatients();
+  }, []);
+
   return (
     <div className="min-h-screen">
       <main className="p-6">
@@ -25,7 +42,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-blue-600">Total Patients</p>
-                  <p className="text-2xl text-blue-900 font-semibold">347</p>
+                  <p className="text-2xl text-blue-900 font-semibold">{patients.length}</p> {/* Display total patients */}
                 </div>
               </div>
             </div>
@@ -158,24 +175,37 @@ const Dashboard = () => {
 };
 
 interface Patient {
-  id: number;
+  id?: string; 
   name: string;
+  diseases: string;
+  allergies: string;
+  roomNumber: string;
+  bedNumber: string;
+  floorNumber: number;
   age: number;
   gender: string;
-  roomNumber: string;
-  mealPlan: string;
-  allergies: string;
+  contactInfo: string;
+  emergencyContact: string;
 }
 
-const patients: Patient[] = [
-  { id: 1, name: "John Doe", age: 45, gender: "Male", roomNumber: "101A", mealPlan: "Low Sodium", allergies: "Peanuts" },
-  { id: 2, name: "Jane Smith", age: 32, gender: "Female", roomNumber: "203B", mealPlan: "Diabetic", allergies: "Lactose" },
-  { id: 3, name: "Bob Johnson", age: 58, gender: "Male", roomNumber: "305C", mealPlan: "Regular", allergies: "None" },
-  { id: 4, name: "Alice Brown", age: 27, gender: "Female", roomNumber: "102A", mealPlan: "Vegetarian", allergies: "Soy" },
-  { id: 5, name: "Charlie Davis", age: 63, gender: "Male", roomNumber: "204B", mealPlan: "Soft", allergies: "Shellfish" },
-];
-
 const PatientList: React.FC<{ searchTerm: string }> = ({ searchTerm }) => {
+  const [patients, setPatients] = useState<Patient[]>([]);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const response = await getAllPatients();
+        if (response) {
+          setPatients(response);
+        }
+      } catch (error) {
+        console.error("Error fetching patients:", error);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
   const filteredPatients = patients.filter((patient) =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -189,8 +219,7 @@ const PatientList: React.FC<{ searchTerm: string }> = ({ searchTerm }) => {
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Age</th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Gender</th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Room</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Meal Plan</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Allergies</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Bed Number</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-blue-50">
@@ -200,8 +229,7 @@ const PatientList: React.FC<{ searchTerm: string }> = ({ searchTerm }) => {
               <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">{patient.age}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">{patient.gender}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">{patient.roomNumber}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">{patient.mealPlan}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">{patient.allergies}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">{patient.bedNumber}</td>
             </tr>
           ))}
         </tbody>

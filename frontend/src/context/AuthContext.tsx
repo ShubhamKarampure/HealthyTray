@@ -1,11 +1,12 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Role } from '@/utils/types';
 
 interface User {
   id: string;
   name: string;
   email: string;
-  role: string; 
+  role: Role; 
 }
 
 interface AuthContextType {
