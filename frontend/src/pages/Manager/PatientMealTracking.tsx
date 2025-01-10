@@ -7,7 +7,6 @@ import {
   updateMealStatus,
   getAvailablePantryStaff,
 } from "@/api/mealApi";
-import { get } from "http";
 
 // Interfaces remain the same
 interface Patient {
@@ -239,7 +238,7 @@ const PatientMealManagement: React.FC = () => {
           getPatientMeals(id),
           getAvailablePantryStaff(),
         ]);
-        console.log(patientMeals);
+        console.log(pantryStaff);
 
         setAvailablePantryStaff(pantryStaff);
 

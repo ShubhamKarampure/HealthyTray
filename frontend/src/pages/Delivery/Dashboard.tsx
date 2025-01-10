@@ -3,11 +3,11 @@ import { FaClipboardList, FaExclamationTriangle, FaUserPlus } from 'react-icons/
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { getAllPatients } from "@/api/patientApi";
 
-const PantryAnalysis = () => {
+const DeliveryAnalysis = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const pantryData = [
+  const DeliveryData = [
     { name: 'Prepared', value: 70 },
     { name: 'Pending', value: 30 },
   ];
@@ -31,7 +31,7 @@ const PantryAnalysis = () => {
     <div className="min-h-screen">
       <main className="p-6">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl text-blue-800 mb-8">Pantry Task Analysis</h1>
+          <h1 className="text-3xl text-blue-800 mb-8">Delivery Task Analysis</h1>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -41,8 +41,8 @@ const PantryAnalysis = () => {
                   <FaClipboardList className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-blue-600">Total Pantry Tasks</p>
-                  <p className="text-2xl text-blue-900 font-semibold">102</p> {/* Display total pantry tasks */}
+                  <p className="text-sm text-blue-600">Total Delivery Tasks</p>
+                  <p className="text-2xl text-blue-900 font-semibold">102</p> {/* Display total Delivery tasks */}
                 </div>
               </div>
             </div>
@@ -75,11 +75,11 @@ const PantryAnalysis = () => {
           {/* Charts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-              <h3 className="text-lg text-blue-800 mb-4">Pantry Task Status</h3>
+              <h3 className="text-lg text-blue-800 mb-4">Delivery Task Status</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
-                    data={pantryData}
+                    data={DeliveryData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -88,7 +88,7 @@ const PantryAnalysis = () => {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {pantryData.map((entry, index) => (
+                    {DeliveryData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -115,7 +115,7 @@ const PantryAnalysis = () => {
                 </div>
                 <div className="flex items-center p-3 bg-blue-50 rounded-lg">
                   <FaExclamationTriangle className="text-blue-600 mr-3" />
-                  <p className="text-sm text-blue-800">New task assigned to Pantry staff</p>
+                  <p className="text-sm text-blue-800">New task assigned to Delivery staff</p>
                 </div>
               </div>
             </div>
@@ -206,4 +206,4 @@ const PatientList: React.FC<{ searchTerm: string }> = ({ searchTerm }) => {
   );
 };
 
-export default PantryAnalysis;
+export default DeliveryAnalysis;

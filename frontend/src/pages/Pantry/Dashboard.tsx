@@ -42,7 +42,7 @@ const PantryAnalysis = () => {
                 </div>
                 <div>
                   <p className="text-sm text-blue-600">Total Pantry Tasks</p>
-                  <p className="text-2xl text-blue-900 font-semibold">102</p> {/* Display total pantry tasks */}
+                  <p className="text-2xl text-blue-900 font-semibold">10</p> {/* Display total pantry tasks */}
                 </div>
               </div>
             </div>

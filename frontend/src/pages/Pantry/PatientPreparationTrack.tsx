@@ -218,7 +218,7 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
 const PatientMealManagement: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   
-  const pantryUserId = "6780e9c2a270f702a510d423"; // Get this from your auth context or props
+  const pantryUserId = "67814cdbc17394c1a07baff8"; // Get this from your auth context or props
   const [patient, setPatient] = useState<Patient | null>(null);
   const [selectedMealType, setSelectedMealType] = useState<"Morning" | "Evening" | "Night" | null>(null);
   const [loading, setLoading] = useState(true);

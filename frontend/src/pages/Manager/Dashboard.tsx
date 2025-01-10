@@ -54,7 +54,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-blue-600">Pending Deliveries</p>
-                  <p className="text-2xl text-blue-900 font-semibold">42</p>
+                  <p className="text-2xl text-blue-900 font-semibold">12</p>
                 </div>
               </div>
             </div>
@@ -78,7 +78,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-blue-600">New Patients Today</p>
-                  <p className="text-2xl text-blue-900 font-semibold">12</p>
+                  <p className="text-2xl text-blue-900 font-semibold">{patients.length}</p>
                 </div>
               </div>
             </div>

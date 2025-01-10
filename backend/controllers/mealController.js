@@ -32,7 +32,7 @@ async function getPatientMeals(req, res) {
 
         // Ensure dietPlan is found before responding
         if (!dietPlan) {
-            return res.status(404).json({ error: 'Diet plan not found' });
+            return res.json([]);
         }
 
         res.json(dietPlan);
