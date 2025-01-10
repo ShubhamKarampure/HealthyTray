@@ -19,9 +19,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/patients', patientRoutes);
-app.use('/api/meals', mealRoutes);
+app.use('api/auth', authRoutes);
+app.use('api/patients', patientRoutes);
+app.use('api/meals', mealRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
