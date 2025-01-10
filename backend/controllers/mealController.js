@@ -152,10 +152,10 @@ async function updateMealStatus(req, res) {
         const updatedMeal = await prisma.mealDetail.update({
             where: { id: mealId },
             data: {
-                preparationStatus,
-                deliveryStatus,
-                deliveryPersonnelId,
-                deliveryNotes,
+                ...(preparationStatus && { preparationStatus }),
+                ...(deliveryStatus && { deliveryStatus }),
+                ...(deliveryPersonnelId && { deliveryPersonnelId }),
+                ...(deliveryNotes && { deliveryNotes }),
                 ...(deliveryStatus === DeliveryStatus.Delivered && {
                     deliveredAt: new Date(),
                 }),
@@ -171,6 +171,7 @@ async function updateMealStatus(req, res) {
         res.status(500).json({ error: 'Failed to update meal status' });
     }
 }
+
 
 // Get available pantry staff
 async function getAvailablePantryStaff(req, res) {

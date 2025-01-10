@@ -6,7 +6,7 @@ import {
   getAvailableDeliveryStaff,
   updateMealStatus,
 } from "@/api/mealApi";
-
+import { useAuth } from "@/context/AuthContext";
 // Interfaces
 interface Patient {
   id: string;
@@ -192,21 +192,6 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Delivery Notes
-            </label>
-            <textarea
-              name="deliveryNotes"
-              value={formData.deliveryNotes}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-md"
-              rows={3}
-              placeholder="Add any delivery notes..."
-              disabled={loading}
-            />
-          </div>
-
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <button
               type="button"
@@ -232,10 +217,10 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
 
 const PatientMealManagement: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  
+  const pantryUserId = "6780e9c2a270f702a510d423"; // Get this from your auth context or props
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [selectedMealType, setSelectedMealType] = useState<
-    "Morning" | "Evening" | "Night"
-  >("Morning");
+  const [selectedMealType, setSelectedMealType] = useState<"Morning" | "Evening" | "Night" | null>(null);
   const [loading, setLoading] = useState(true);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [meals, setMeals] = useState<{ [key: string]: MealDetail | null }>({
@@ -243,6 +228,30 @@ const PatientMealManagement: React.FC = () => {
     Evening: null,
     Night: null,
   });
+
+  // Filter meals assigned to the current pantry user
+  const getPantryAssignedMeals = (patientMeals: any) => {
+    const filteredMeals = {
+      Morning: patientMeals.morningMeal && patientMeals.morningMeal.pantryStaffId === pantryUserId 
+        ? patientMeals.morningMeal 
+        : null,
+      Evening: patientMeals.eveningMeal && patientMeals.eveningMeal.pantryStaffId === pantryUserId 
+        ? patientMeals.eveningMeal 
+        : null,
+      Night: patientMeals.nightMeal && patientMeals.nightMeal.pantryStaffId === pantryUserId 
+        ? patientMeals.nightMeal 
+        : null
+    };
+
+    return filteredMeals;
+  };
+
+  // Get available meal types (only those assigned to pantry user)
+  const getAvailableMealTypes = () => {
+    return Object.entries(meals)
+      .filter(([_, meal]) => meal !== null && meal.pantryStaffId === pantryUserId)
+      .map(([type]) => type as "Morning" | "Evening" | "Night");
+  };
 
   useEffect(() => {
     const fetchPatient = async () => {
@@ -267,11 +276,16 @@ const PatientMealManagement: React.FC = () => {
         const patientMeals = await getPatientMeals(id);
 
         if (patientMeals) {
-          setMeals({
-            Morning: patientMeals.morningMeal,
-            Evening: patientMeals.eveningMeal,
-            Night: patientMeals.nightMeal,
-          });
+          // Filter meals for the current pantry user
+          const filteredMeals = getPantryAssignedMeals(patientMeals);
+          setMeals(filteredMeals);
+          
+          // Set the first available meal type as selected
+          const firstAvailableMeal = Object.entries(filteredMeals)
+            .find(([_, meal]) => meal !== null);
+          if (firstAvailableMeal) {
+            setSelectedMealType(firstAvailableMeal[0] as "Morning" | "Evening" | "Night");
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -282,20 +296,24 @@ const PatientMealManagement: React.FC = () => {
 
     fetchPatient();
     fetchData();
-  }, [id]);
+  }, [id, pantryUserId]);
 
   const handleStatusUpdate = async (mealId: string, statusData: any) => {
     try {
       const updatedMeal = await updateMealStatus(mealId, statusData);
-      setMeals((prevMeals) => ({
-        ...prevMeals,
-        [selectedMealType]: updatedMeal,
-      }));
+      // Only update if the meal is still assigned to this pantry user
+      if (updatedMeal.pantryStaffId === pantryUserId) {
+        setMeals((prevMeals) => ({
+          ...prevMeals,
+          [selectedMealType!]: updatedMeal,
+        }));
+      }
     } catch (error) {
       console.error("Error updating meal status:", error);
-      throw error; // Propagate error to modal
+      throw error;
     }
   };
+
 
   const getMealStatusColor = (status: string): string => {
     switch (status) {
@@ -520,21 +538,34 @@ const PatientMealManagement: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-blue-100">
-            <div className="border-b border-blue-100">
-              <div className="flex">
-                {["Morning", "Evening", "Night"].map((type) => (
-                  <MealTypeTab
-                    key={type}
-                    type={type as "Morning" | "Evening" | "Night"}
-                    hasExistingMeal={!!meals[type]}
-                    selectedMealType={selectedMealType}
-                    onSelect={setSelectedMealType}
-                  />
-                ))}
+            {getAvailableMealTypes().length > 0 ? (
+              <>
+                <div className="border-b border-blue-100">
+                  <div className="flex">
+                    {getAvailableMealTypes().map((type) => (
+                      <MealTypeTab
+                        key={type}
+                        type={type}
+                        hasExistingMeal={!!meals[type]}
+                        selectedMealType={selectedMealType || "Morning"}
+                        onSelect={setSelectedMealType}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <MealContent />
+              </>
+            ) : (
+              <div className="p-6">
+                <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8">
+                  <div className="text-center">
+                    <div className="text-gray-500 mb-4">
+                      No meals are currently assigned to you for this patient
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <MealContent />
+            )}
           </div>
         </div>
       </main>

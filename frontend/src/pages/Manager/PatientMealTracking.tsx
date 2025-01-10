@@ -394,6 +394,23 @@ const PatientMealManagement: React.FC = () => {
                         </span>
                       </div>
                     </div>
+                    {currentMeal.deliveryPersonnel && (
+                      <div className="pt-2 border-t border-gray-200">
+                        <div className="font-medium text-gray-700 mb-2">
+                          Assigned Delivery Staff
+                        </div>
+                        <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-800 font-medium">
+                              {currentMeal.deliveryPersonnel.name.charAt(0)}
+                            </span>
+                          </div>
+                          <span className="text-gray-600">
+                            {currentMeal.deliveryPersonnel.name}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

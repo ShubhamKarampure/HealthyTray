@@ -49,7 +49,7 @@ export async function updateMealStatus(mealId: string, statusData: {
     deliveryNotes?: string;
 }) {
     try {
-        const response = await fetch(`${API_ROUTES.MEALS}/patient/${mealId}`, {
+        const response = await fetch(`${API_ROUTES.MEALS}/patient/${mealId}/status`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

@@ -68,7 +68,7 @@ const handleLogout = () => {
     ],
     Delivery: [
       { path: '/home/delivery/dashboard', icon: HomeIcon, label: 'Dashboard' },
-      { path: '/home/delivery/assigned-deliveries', icon: TruckIcon, label: 'Assigned' },
+      { path: '/home/delivery/assigned', icon: TruckIcon, label: 'Assigned' },
     ],
   };
 

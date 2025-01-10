@@ -3,16 +3,26 @@ import { lazy } from "react";
 const ManagerDashboard = lazy(() => import("@/pages/Manager/Dashboard"));
 const PatientDetails = lazy(() => import("@/pages/Manager/PatientDetails"));
 const MealManagement = lazy(() => import("@/pages/Manager/MealManagement"));
-const PatientMealTracking = lazy(() => import("@/pages/Manager/PatientMealTracking"));
+const PatientMealTracking = lazy(
+  () => import("@/pages/Manager/PatientMealTracking")
+);
 
 // Inner Pantry Pages
 const PantryDashboard = lazy(() => import("@/pages/Pantry/Dashboard"));
 const MealPreparation = lazy(() => import("@/pages/Pantry/MealPreparation"));
-const PatientMealPreparation = lazy(() => import("@/pages/Pantry/PatientPreparationTrack"));
+const PatientMealPreparation = lazy(
+  () => import("@/pages/Pantry/PatientPreparationTrack")
+);
 
 // Delivery Personnel Pages
 const DeliveryDashboard = lazy(() => import("@/pages/Delivery/Dashboard"));
-const AssignedDeliveries = lazy(() => import("@/pages/Delivery/AssignedDeliveries"));
+const AssignedDeliveries = lazy(
+  () => import("@/pages/Delivery/AssignedDeliveries")
+);
+const PatientDelivery = lazy(
+  () => import("@/pages/Delivery/PatientDelivery")
+);
+
 
 // Authentication Pages
 const Home = lazy(() => import("@/pages/LandingPage"));
@@ -40,13 +50,13 @@ const managerRoutes = [
   {
     path: "/home/manager/meals",
     name: "Meal Management",
-    element: < MealManagement/>,
+    element: <MealManagement />,
   },
   {
     path: "/home/manager/meals/:id",
     name: "Patient Meal Tracking",
     element: <PatientMealTracking />,
-  }
+  },
 ];
 
 const pantryRoutes = [
@@ -63,8 +73,8 @@ const pantryRoutes = [
   {
     path: "/home/pantry/meals/:id",
     name: "Patient Meal Tracking",
-    element: <PatientMealPreparation/>,
-  }
+    element: <PatientMealPreparation />,
+  },
 ];
 
 const deliveryRoutes = [
@@ -77,6 +87,11 @@ const deliveryRoutes = [
     path: "/home/delivery/assigned",
     name: "Assigned Deliveries",
     element: <AssignedDeliveries />,
+  },
+  {
+    path: "/home/delivery/meals/:id",
+    name: "Patient Delivery Tracking",
+    element: <PatientDelivery/>,
   },
 ];
 
