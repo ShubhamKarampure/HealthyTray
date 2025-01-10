@@ -5,4 +5,6 @@ export const API_ROUTES = {
     LOGIN: `${API_BASE_URL}/api/auth/login`, // User login (JWT)
 
     PATIENTS: `${API_BASE_URL}/api/patients`, // Get all patients
+
+    MEALS: `${API_BASE_URL}/api/meals`, // Get all patients
 }

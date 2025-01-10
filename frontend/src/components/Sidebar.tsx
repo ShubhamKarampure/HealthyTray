@@ -63,10 +63,8 @@ const handleLogout = () => {
       { path: '/home/manager/meals', icon: UtensilsIcon, label: 'Diet' },
     ],
     Pantry: [
-      { path: '/home/pantry/dashboard', icon: HomeIcon, label: 'Pantry' },
-      { path: '/home/pantry/meal-preparation', icon: UtensilsIcon, label: 'Meal' },
-      { path: '/home/pantry/delivery-personnel', icon: UsersIcon, label: 'Delivery' },
-      { path: '/home/pantry/delivery-status', icon: TruckIcon, label: 'Delivery' },
+      { path: '/home/pantry/dashboard', icon: HomeIcon, label: 'Dashboard' },
+      { path: '/home/pantry/meal-preparation', icon: UtensilsIcon, label: 'Meal' }
     ],
     Delivery: [
       { path: '/home/delivery/dashboard', icon: HomeIcon, label: 'Dashboard' },

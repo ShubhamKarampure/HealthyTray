@@ -1,32 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaEdit, FaSearch } from 'react-icons/fa';
+import { getAllPatients } from '@/api/patientApi';
+import { useNavigate } from 'react-router-dom';  // Import useNavigate
 
 interface Patient {
-  id: number;
+  id: string;
   name: string;
-  mealStatus: 'Not Assigned' | 'In Pantry' | 'Delivered';
   age: number;
   roomNumber: string;
-  contactInformation: string;
+  contactInfo: string;
+  dietPlans: [];
 }
 
-const initialPatients: Patient[] = [
-  { id: 1, name: 'John Doe', mealStatus: 'Not Assigned', age: 45, roomNumber: '101A', contactInformation: '123-456-7890' },
-  { id: 2, name: 'Jane Smith', mealStatus: 'In Pantry', age: 32, roomNumber: '203B', contactInformation: '234-567-8901' },
-  { id: 3, name: 'Robert Brown', mealStatus: 'Delivered', age: 50, roomNumber: '305C', contactInformation: '345-678-9012' },
-];
-
 const MealManagement: React.FC = () => {
-  const [patients, setPatients] = useState<Patient[]>(initialPatients);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const navigate = useNavigate(); // Initialize useNavigate
 
-  // Sorting patients by meal status: Not Assigned -> In Pantry -> Delivered
-  const sortedPatients = patients
-    .filter(patient => patient.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => {
-      const statusOrder = { 'Not Assigned': 1, 'In Pantry': 2, 'Delivered': 3 };
-      return statusOrder[a.mealStatus] - statusOrder[b.mealStatus];
-    });
+  useEffect(() => {
+    const fetchPatients = async () => {
+      const data = await getAllPatients();
+      if (data) {
+        const formattedData = data.map((patient: any) => ({
+          ...patient,
+          mealStatus: patient.dietPlans.length > 0 ? 'Assigned' : 'Not Assigned',
+        }));
+        setPatients(formattedData);
+      }
+    };
+    fetchPatients();
+  }, []);
+
+  const handleUpdateClick = (id: string) => {
+    navigate(`/home/manager/meals/${id}`); // Navigate to the patient's update page
+  };
+
+  const filteredPatients = patients.filter(patient =>
+    patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,7 +55,6 @@ const MealManagement: React.FC = () => {
               />
               <FaSearch className="text-blue-600" />
             </div>
-           
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden">
@@ -64,22 +74,23 @@ const MealManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-blue-50">
-                  {sortedPatients.map((patient) => (
+                  {filteredPatients.map(patient => (
                     <tr
                       key={patient.id}
                       className={`hover:bg-blue-50 transition-colors ${
-                        patient.mealStatus === 'Not Assigned' ? 'bg-red-50' :
-                        patient.mealStatus === 'In Pantry' ? 'bg-yellow-50' :
-                        'bg-green-50'
+                        patient.dietPlans.length === 0 ? 'bg-red-50' : 'bg-green-50'
                       }`}
                     >
                       <td className="px-6 py-4 text-sm text-blue-900">{patient.name}</td>
                       <td className="px-6 py-4 text-sm text-blue-700">{patient.age}</td>
                       <td className="px-6 py-4 text-sm text-blue-700">{patient.roomNumber}</td>
                       <td className="px-6 py-4 text-sm text-blue-700">{patient.mealStatus}</td>
-                      <td className="px-6 py-4 text-sm text-blue-700">{patient.contactInformation}</td>
+                      <td className="px-6 py-4 text-sm text-blue-700">{patient.contactInfo}</td>
                       <td className="px-6 py-4 text-sm text-blue-700">
-                        <button className="text-blue-600 hover:text-blue-800">
+                        <button
+                          className="text-blue-600 hover:text-blue-800"
+                          onClick={() => handleUpdateClick(patient.id)}
+                        >
                           <FaEdit />
                         </button>
                       </td>

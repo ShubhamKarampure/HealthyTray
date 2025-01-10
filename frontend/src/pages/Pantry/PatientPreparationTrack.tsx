@@ -3,13 +3,11 @@ import { useParams } from "react-router-dom";
 import { getSinglePatients } from "@/api/patientApi";
 import {
   getPatientMeals,
-  createOrUpdateMeal,
+  getAvailableDeliveryStaff,
   updateMealStatus,
-  getAvailablePantryStaff,
 } from "@/api/mealApi";
-import { get } from "http";
 
-// Interfaces remain the same
+// Interfaces
 interface Patient {
   id: string;
   name: string;
@@ -25,7 +23,7 @@ interface Patient {
   dietPlans: any[];
 }
 
-interface PantryStaff {
+interface DeliveryStaff {
   id: string;
   name: string;
   contactInfo: string;
@@ -57,118 +55,136 @@ interface MealTypeTabProps {
   onSelect: (type: "Morning" | "Evening" | "Night") => void;
 }
 
-interface MealFormProps {
+interface StatusUpdateModalProps {
+  meal: MealDetail;
   onClose: () => void;
-  onSubmit: (mealData: {
-    ingredients: string;
-    instructions: string;
-    pantryStaffId: string;
-  }) => void;
-  selectedMealType: "Morning" | "Evening" | "Night";
-  existingMeal: MealDetail | null;
-  availablePantryStaff: PantryStaff[];
+  onUpdate: (mealId: string, statusData: any) => Promise<void>;
 }
 
-const MealForm: React.FC<MealFormProps> = ({
+const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
+  meal,
   onClose,
-  onSubmit,
-  selectedMealType,
-  existingMeal,
-  availablePantryStaff,
+  onUpdate,
 }) => {
+  const [deliveryStaff, setDeliveryStaff] = useState<DeliveryStaff[]>([]);
   const [formData, setFormData] = useState({
-    ingredients: existingMeal?.ingredients || "",
-    instructions: existingMeal?.instructions || "",
-    pantryStaffId: existingMeal?.pantryStaffId || "",
+    preparationStatus: meal.preparationStatus,
+    deliveryStatus: meal.deliveryStatus,
+    deliveryPersonnelId: meal.deliveryPersonnelId || "",
+    deliveryNotes: meal.deliveryNotes || "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchDeliveryStaff = async () => {
+      try {
+        const staff = await getAvailableDeliveryStaff();
+        setDeliveryStaff(staff);
+      } catch (error) {
+        setError("Failed to fetch delivery staff");
+        console.error("Error fetching delivery staff:", error);
+      }
+    };
+
+    fetchDeliveryStaff();
+  }, []);
+
+  const validateForm = () => {
+    if (formData.deliveryStatus === "Delivered" && !formData.deliveryPersonnelId) {
+      setError("Please assign a delivery staff member before marking as delivered");
+      return false;
+    }
+    if (formData.deliveryStatus === "Delivered" && formData.preparationStatus !== "Completed") {
+      setError("Meal must be completed before marking as delivered");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setError(null);
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const updateData = {
+        ...formData,
+        deliveredAt: formData.deliveryStatus === "Delivered" ? new Date() : undefined,
+      };
+      await onUpdate(meal.id, updateData);
+      onClose();
+    } catch (error) {
+      setError("Failed to update meal status");
+      console.error("Error updating status:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    setError(null); // Clear error when user makes changes
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl m-4">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md m-4">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl text-blue-800">
-            {existingMeal ? "Update" : "Create"} {selectedMealType} Meal Plan
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
+          <h3 className="text-xl font-medium text-blue-800">Update Meal Status</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="ingredients"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Ingredients
-            </label>
-            <textarea
-              id="ingredients"
-              name="ingredients"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              rows={3}
-              value={formData.ingredients}
-              onChange={handleChange}
-              placeholder="Enter ingredients list"
-              required
-              autoFocus
-            />
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+            {error}
           </div>
+        )}
 
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label
-              htmlFor="instructions"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Preparation Instructions
-            </label>
-            <textarea
-              id="instructions"
-              name="instructions"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              rows={3}
-              value={formData.instructions}
-              onChange={handleChange}
-              placeholder="Enter preparation instructions"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="pantryStaffId"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Assign Pantry Staff
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Preparation Status
             </label>
             <select
-              id="pantryStaffId"
-              name="pantryStaffId"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              value={formData.pantryStaffId}
+              name="preparationStatus"
+              value={formData.preparationStatus}
               onChange={handleChange}
-              required
+              className="w-full p-2 border border-gray-300 rounded-md"
+              disabled={loading}
             >
-              <option value="">Select Pantry Staff</option>
-              {availablePantryStaff.map((staff) => (
+              <option value="Pending">Pending</option>
+              <option value="InProgress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Assign Delivery Staff
+            </label>
+            <select
+              name="deliveryPersonnelId"
+              value={formData.deliveryPersonnelId}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-md"
+              disabled={loading}
+            >
+              <option value="">Select Delivery Staff</option>
+              {deliveryStaff.map((staff) => (
                 <option key={staff.id} value={staff.id}>
                   {staff.name}
                 </option>
@@ -176,19 +192,36 @@ const MealForm: React.FC<MealFormProps> = ({
             </select>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Delivery Notes
+            </label>
+            <textarea
+              name="deliveryNotes"
+              value={formData.deliveryNotes}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-md"
+              rows={3}
+              placeholder="Add any delivery notes..."
+              disabled={loading}
+            />
+          </div>
+
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
+              disabled={loading}
             >
-              {existingMeal ? "Update" : "Create"} Meal Plan
+              {loading ? "Updating..." : "Update Status"}
             </button>
           </div>
         </form>
@@ -203,11 +236,8 @@ const PatientMealManagement: React.FC = () => {
   const [selectedMealType, setSelectedMealType] = useState<
     "Morning" | "Evening" | "Night"
   >("Morning");
-  const [showMealForm, setShowMealForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [availablePantryStaff, setAvailablePantryStaff] = useState<
-    PantryStaff[]
-  >([]);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const [meals, setMeals] = useState<{ [key: string]: MealDetail | null }>({
     Morning: null,
     Evening: null,
@@ -234,14 +264,7 @@ const PatientMealManagement: React.FC = () => {
     const fetchData = async () => {
       try {
         if (!id) return;
-       
-        const [patientMeals, pantryStaff] = await Promise.all([
-          getPatientMeals(id),
-          getAvailablePantryStaff(),
-        ]);
-        console.log(patientMeals);
-
-        setAvailablePantryStaff(pantryStaff);
+        const patientMeals = await getPatientMeals(id);
 
         if (patientMeals) {
           setMeals({
@@ -261,6 +284,19 @@ const PatientMealManagement: React.FC = () => {
     fetchData();
   }, [id]);
 
+  const handleStatusUpdate = async (mealId: string, statusData: any) => {
+    try {
+      const updatedMeal = await updateMealStatus(mealId, statusData);
+      setMeals((prevMeals) => ({
+        ...prevMeals,
+        [selectedMealType]: updatedMeal,
+      }));
+    } catch (error) {
+      console.error("Error updating meal status:", error);
+      throw error; // Propagate error to modal
+    }
+  };
+
   const getMealStatusColor = (status: string): string => {
     switch (status) {
       case "Completed":
@@ -269,34 +305,6 @@ const PatientMealManagement: React.FC = () => {
         return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-red-100 text-red-800";
-    }
-  };
-
-  const handleMealFormSubmit = async (mealData: {
-    ingredients: string;
-    instructions: string;
-    pantryStaffId: string;
-  }) => {
-    try {
-      if (!id) return;
-
-      const mealPayload = {
-        mealType: selectedMealType,
-        ...mealData,
-      };
-
-      const response = await createOrUpdateMeal(id, mealPayload);
-
-      if (response) {
-        setMeals((prevMeals) => ({
-          ...prevMeals,
-          [selectedMealType]: response,
-        }));
-      }
-
-      setShowMealForm(false);
-    } catch (error) {
-      console.error("Error creating/updating meal:", error);
     }
   };
 
@@ -345,9 +353,7 @@ const PatientMealManagement: React.FC = () => {
                       <div className="font-medium text-gray-700 mb-2">
                         Instructions
                       </div>
-                      <p className="text-gray-600">
-                        {currentMeal.instructions}
-                      </p>
+                      <p className="text-gray-600">{currentMeal.instructions}</p>
                     </div>
                   </div>
                 </div>
@@ -394,17 +400,40 @@ const PatientMealManagement: React.FC = () => {
                         </span>
                       </div>
                     </div>
+                    {currentMeal.deliveryPersonnel && (
+                      <div className="pt-2 border-t border-gray-200">
+                        <div className="font-medium text-gray-700 mb-2">
+                          Assigned Delivery Staff
+                        </div>
+                        <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-800 font-medium">
+                              {currentMeal.deliveryPersonnel.name.charAt(0)}
+                            </span>
+                          </div>
+                          <span className="text-gray-600">
+                            {currentMeal.deliveryPersonnel.name}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {currentMeal.deliveryNotes && (
+                      <div className="pt-2 border-t border-gray-200">
+                        <div className="font-medium text-gray-700 mb-2">
+                          Delivery Notes
+                        </div>
+                        <p className="text-gray-600">{currentMeal.deliveryNotes}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => setShowMealForm(true)}
-                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Update Meal Plan
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowStatusModal(true)}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Update Status & Delivery
+                </button>
               </div>
             </div>
           </div>
@@ -412,20 +441,23 @@ const PatientMealManagement: React.FC = () => {
           <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8">
             <div className="text-center">
               <div className="text-gray-500 mb-4">
-                No meal plan created for {selectedMealType.toLowerCase()} yet
+                No meal plan available for {selectedMealType.toLowerCase()}
               </div>
-              <button
-                onClick={() => setShowMealForm(true)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Create Meal Plan
-              </button>
             </div>
           </div>
+        )}
+
+        {showStatusModal && meals[selectedMealType] && (
+          <StatusUpdateModal
+            meal={meals[selectedMealType]!}
+            onClose={() => setShowStatusModal(false)}
+            onUpdate={handleStatusUpdate}
+          />
         )}
       </div>
     );
   };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -433,6 +465,7 @@ const PatientMealManagement: React.FC = () => {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="p-6">
@@ -505,19 +538,8 @@ const PatientMealManagement: React.FC = () => {
           </div>
         </div>
       </main>
-
-      {showMealForm && (
-        <MealForm
-          onClose={() => setShowMealForm(false)}
-          onSubmit={handleMealFormSubmit}
-          selectedMealType={selectedMealType}
-          existingMeal={meals[selectedMealType]}
-          availablePantryStaff={availablePantryStaff}
-        />
-      )}
     </div>
   );
 };
 
 export default PatientMealManagement;
-

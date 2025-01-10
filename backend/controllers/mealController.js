@@ -1,255 +1,233 @@
+// controllers/mealController.js
 const { PrismaClient, MealType, PreparationStatus, DeliveryStatus } = require('@prisma/client');
-
+const { get } = require('../routes/patientRoutes');
 const prisma = new PrismaClient();
-
-class MealController {
-    // Create a single meal detail
-    async createMealDetail(data) {
-        try {
-            // Verify pantry staff exists
-            const pantryStaff = await prisma.user.findUnique({
-                where: { id: data.pantryStaffId }
-            });
-
-            if (!pantryStaff || pantryStaff.role !== 'Pantry') {
-                throw new Error('Invalid pantry staff ID');
-            }
-
-            const meal = await prisma.mealDetail.create({
-                data: {
-                    mealType: data.mealType,
-                    ingredients: data.ingredients,
-                    instructions: data.instructions,
-                    pantryStaffId: data.pantryStaffId,
-                    preparationStatus: PreparationStatus.Pending,
-                    deliveryStatus: DeliveryStatus.Pending,
-                }
-            });
-
-            return meal;
-        } catch (error) {
-            throw new Error(`Failed to create meal: ${error.message}`);
-        }
-    }
-
-    // Create complete diet plan with all meals
-    async createDietPlan(data) {
-        try {
-            // Verify patient exists
-            const patient = await prisma.patient.findUnique({
-                where: { id: data.patientId }
-            });
-
-            if (!patient) {
-                throw new Error('Patient not found');
-            }
-
-            // Create all meals in a transaction
-            const dietPlan = await prisma.$transaction(async (prisma) => {
-                // Create morning meal
-                const morningMeal = await prisma.mealDetail.create({
-                    data: {
-                        mealType: MealType.Morning,
-                        ingredients: data.morningMeal.ingredients,
-                        instructions: data.morningMeal.instructions,
-                        pantryStaffId: data.morningMeal.pantryStaffId,
-                        preparationStatus: PreparationStatus.Pending,
-                        deliveryStatus: DeliveryStatus.Pending,
-                    }
-                });
-
-                // Create evening meal
-                const eveningMeal = await prisma.mealDetail.create({
-                    data: {
-                        mealType: MealType.Evening,
-                        ingredients: data.eveningMeal.ingredients,
-                        instructions: data.eveningMeal.instructions,
-                        pantryStaffId: data.eveningMeal.pantryStaffId,
-                        preparationStatus: PreparationStatus.Pending,
-                        deliveryStatus: DeliveryStatus.Pending,
-                    }
-                });
-
-                // Create night meal
-                const nightMeal = await prisma.mealDetail.create({
-                    data: {
-                        mealType: MealType.Night,
-                        ingredients: data.nightMeal.ingredients,
-                        instructions: data.nightMeal.instructions,
-                        pantryStaffId: data.nightMeal.pantryStaffId,
-                        preparationStatus: PreparationStatus.Pending,
-                        deliveryStatus: DeliveryStatus.Pending,
-                    }
-                });
-
-                // Create diet plan linking all meals
-                const dietPlan = await prisma.dietPlan.create({
-                    data: {
-                        patientId: data.patientId,
-                        morningMealId: morningMeal.id,
-                        eveningMealId: eveningMeal.id,
-                        nightMealId: nightMeal.id,
-                    },
+// Get all meals for a patient
+async function getPatientMeals(req, res) {
+    const { id } = req.params;
+    try {
+        const dietPlan = await prisma.dietPlan.findFirst({
+            where: { patientId: id },  // Ensure we query by the patientId
+            include: {
+                morningMeal: {
                     include: {
-                        patient: true,
-                        morningMeal: true,
-                        eveningMeal: true,
-                        nightMeal: true,
-                    }
-                });
-
-                return dietPlan;
-            });
-
-            return dietPlan;
-        } catch (error) {
-            throw new Error(`Failed to create diet plan: ${error.message}`);
-        }
-    }
-
-    // Update meal preparation status
-    async updateMealPreparationStatus(mealId, status, pantryStaffId) {
-        try {
-            const meal = await prisma.mealDetail.findUnique({
-                where: { id: mealId }
-            });
-
-            if (!meal) {
-                throw new Error('Meal not found');
-            }
-
-            if (meal.pantryStaffId !== pantryStaffId) {
-                throw new Error('Unauthorized to update this meal');
-            }
-
-            const updatedMeal = await prisma.mealDetail.update({
-                where: { id: mealId },
-                data: { preparationStatus: status }
-            });
-
-            return updatedMeal;
-        } catch (error) {
-            throw new Error(`Failed to update meal preparation status: ${error.message}`);
-        }
-    }
-
-    // Assign delivery personnel to meal
-    async assignDeliveryPersonnel(mealId, deliveryPersonnelId) {
-        try {
-            // Verify delivery personnel exists and has correct role
-            const deliveryPerson = await prisma.user.findUnique({
-                where: { id: deliveryPersonnelId }
-            });
-
-            if (!deliveryPerson || deliveryPerson.role !== 'Delivery') {
-                throw new Error('Invalid delivery personnel ID');
-            }
-
-            const updatedMeal = await prisma.mealDetail.update({
-                where: { id: mealId },
-                data: { 
-                    deliveryPersonnelId,
-                    deliveryStatus: DeliveryStatus.Pending
-                }
-            });
-
-            return updatedMeal;
-        } catch (error) {
-            throw new Error(`Failed to assign delivery personnel: ${error.message}`);
-        }
-    }
-
-    // Mark meal as delivered
-    async markMealDelivered(mealId, deliveryPersonnelId, notes) {
-        try {
-            const meal = await prisma.mealDetail.findUnique({
-                where: { id: mealId }
-            });
-
-            if (!meal || meal.deliveryPersonnelId !== deliveryPersonnelId) {
-                throw new Error('Unauthorized to update this delivery');
-            }
-
-            const updatedMeal = await prisma.mealDetail.update({
-                where: { id: mealId },
-                data: {
-                    deliveryStatus: DeliveryStatus.Delivered,
-                    deliveredAt: new Date(),
-                    deliveryNotes: notes
-                }
-            });
-
-            return updatedMeal;
-        } catch (error) {
-            throw new Error(`Failed to mark meal as delivered: ${error.message}`);
-        }
-    }
-
-    // Get patient's current diet plan
-    async getPatientDietPlan(patientId) {
-        try {
-            const dietPlan = await prisma.dietPlan.findFirst({
-                where: { patientId },
-                include: {
-                    patient: true,
-                    morningMeal: true,
-                    eveningMeal: true,
-                    nightMeal: true,
+                        pantryStaff: true,
+                        deliveryPersonnel: true,
+                    },
                 },
-                orderBy: {
-                    id: 'desc'
-                }
-            });
-
-            if (!dietPlan) {
-                throw new Error('No diet plan found for patient');
-            }
-
-            return dietPlan;
-        } catch (error) {
-            throw new Error(`Failed to get patient diet plan: ${error.message}`);
-        }
-    }
-
-    // Get all meals assigned to pantry staff
-    async getPantryStaffMeals(pantryStaffId) {
-        try {
-            const meals = await prisma.mealDetail.findMany({
-                where: { 
-                    pantryStaffId,
-                    preparationStatus: {
-                        not: PreparationStatus.Completed
-                    }
+                eveningMeal: {
+                    include: {
+                        pantryStaff: true,
+                        deliveryPersonnel: true,
+                    },
                 },
-                orderBy: {
-                    id: 'desc'
-                }
-            });
-
-            return meals;
-        } catch (error) {
-            throw new Error(`Failed to get pantry staff meals: ${error.message}`);
-        }
-    }
-
-    // Get all meals assigned to delivery personnel
-    async getDeliveryPersonnelMeals(deliveryPersonnelId) {
-        try {
-            const meals = await prisma.mealDetail.findMany({
-                where: { 
-                    deliveryPersonnelId,
-                    deliveryStatus: DeliveryStatus.Pending
+                nightMeal: {
+                    include: {
+                        pantryStaff: true,
+                        deliveryPersonnel: true,
+                    },
                 },
-                orderBy: {
-                    id: 'desc'
-                }
-            });
+            },
+        });
 
-            return meals;
-        } catch (error) {
-            throw new Error(`Failed to get delivery personnel meals: ${error.message}`);
+        // Ensure dietPlan is found before responding
+        if (!dietPlan) {
+            return res.status(404).json({ error: 'Diet plan not found' });
         }
+
+        res.json(dietPlan);
+    } catch (error) {
+        console.error('Error fetching patient meals:', error);
+        res.status(500).json({ error: 'Failed to fetch patient meals' });
     }
 }
 
-module.exports = MealController;
+async function createOrUpdateMeal(req, res) {
+    const { id: patientId } = req.params;
+    const { mealType, ingredients, instructions, pantryStaffId } = req.body;
+
+    try {
+        // Input validation
+        if (!patientId) {
+            return res.status(400).json({ error: 'Patient ID is required' });
+        }
+
+        const validMealTypes = ['Morning', 'Evening', 'Night'];
+        if (!validMealTypes.includes(mealType)) {
+            return res.status(400).json({ error: 'Invalid meal type' });
+        }
+
+        // Start a transaction to ensure data consistency
+        const result = await prisma.$transaction(async (prisma) => {
+            // 1. Create new meal detail
+            const mealDetail = await prisma.mealDetail.create({
+                data: {
+                    mealType,
+                    ingredients,
+                    instructions,
+                    preparationStatus: 'Pending',
+                    deliveryStatus: 'Pending',
+                    pantryStaffId,
+                },
+                include: {
+                    pantryStaff: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                },
+            });
+
+            // 2. Find existing diet plan for the patient
+            const existingDietPlan = await prisma.dietPlan.findFirst({
+                where: {
+                    patientId,
+                },
+            });
+
+            if (existingDietPlan) {
+                // 3a. Update existing diet plan
+                const updateData = {
+                    [`${mealType.toLowerCase()}MealId`]: mealDetail.id,
+                };
+
+                await prisma.dietPlan.update({
+                    where: {
+                        id: existingDietPlan.id,
+                    },
+                    data: updateData,
+                });
+            } else {
+                // 3b. Create new diet plan
+                const mealData = {
+                    [`${mealType.toLowerCase()}MealId`]: mealDetail.id,
+                     morningMealId: mealType === 'Morning' ? mealDetail.id : null,
+                    eveningMealId: mealType === 'Evening' ? mealDetail.id : null,
+                    nightMealId: mealType === 'Night' ? mealDetail.id : null,
+                };
+
+                await prisma.dietPlan.create({
+                    data: {
+                        patientId,
+                        ...mealData,
+                    },
+                });
+            }
+
+            return mealDetail;
+        });
+
+        // Send response with the created/updated meal detail
+        res.json(result);
+    } catch (error) {
+        console.error('Error occurred:', error);
+        
+        // Provide more specific error messages based on the error type
+        if (error.code === 'P2002') {
+            return res.status(409).json({ 
+                error: 'A meal with these details already exists' 
+            });
+        }
+        
+        if (error.code === 'P2025') {
+            return res.status(404).json({ 
+                error: 'Patient or Pantry Staff not found' 
+            });
+        }
+
+        res.status(500).json({ 
+            error: 'Failed to create/update meal',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+}
+
+
+// Update meal status
+async function updateMealStatus(req, res) {
+    const { mealId } = req.params;
+    const { preparationStatus, deliveryStatus, deliveryPersonnelId, deliveryNotes } = req.body;
+
+    try {
+        const updatedMeal = await prisma.mealDetail.update({
+            where: { id: mealId },
+            data: {
+                preparationStatus,
+                deliveryStatus,
+                deliveryPersonnelId,
+                deliveryNotes,
+                ...(deliveryStatus === DeliveryStatus.Delivered && {
+                    deliveredAt: new Date(),
+                }),
+            },
+            include: {
+                pantryStaff: true,
+                deliveryPersonnel: true,
+            },
+        });
+
+        res.json(updatedMeal);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update meal status' });
+    }
+}
+
+// Get available pantry staff
+async function getAvailablePantryStaff(req, res) {
+    try {
+        console.log('Fetching pantry staff with role: Pantry'); // Debug log
+        const pantryStaff = await prisma.user.findMany({
+            where: { role: 'Pantry' },
+            select: {
+                id: true,
+                name: true,
+                contactInfo: true,
+            },
+        });
+
+        console.log('Pantry staff:', pantryStaff); // Debug log
+
+        if (!pantryStaff || pantryStaff.length === 0) {
+            return res.status(404).json({ error: 'No pantry staff found' });
+        }
+
+        res.json(pantryStaff);
+    } catch (error) {
+        console.error('Error fetching pantry staff:', error); // Log the error
+        res.status(500).json({ error: 'Failed to fetch pantry staff' });
+    }
+}
+
+// Get available delivery staff
+async function getAvailableDeliveryStaff(req, res) {
+    try {
+        console.log('Fetching delivery staff with role: Delivery'); // Debug log
+        const deliveryStaff = await prisma.user.findMany({
+            where: { role: 'Delivery' },
+            select: {
+                id: true,
+                name: true,
+                contactInfo: true,
+            },
+        });
+
+        console.log('Delivery staff:', deliveryStaff); // Debug log
+
+        if (!deliveryStaff || deliveryStaff.length === 0) {
+            return res.status(404).json({ error: 'No delivery staff found' });
+        }
+
+        res.json(deliveryStaff);
+    } catch (error) {
+        console.error('Error fetching delivery staff:', error); // Log the error
+        res.status(500).json({ error: 'Failed to fetch delivery staff' });
+    }
+}
+
+module.exports = {
+    getPatientMeals,
+    createOrUpdateMeal,
+    updateMealStatus,
+    getAvailablePantryStaff,
+    getAvailableDeliveryStaff,
+};

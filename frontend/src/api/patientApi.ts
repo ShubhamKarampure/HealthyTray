@@ -38,6 +38,26 @@ export const getAllPatients = async () => {
   }
 };
 
+export const getSinglePatients = async (id: string) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch( `${API_ROUTES.PATIENTS}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error("Failed to fetch patients");
+    }
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
 export const createPatient = async (patientData: CreatePatientRequest) => {
   try {
     const token = localStorage.getItem("token");

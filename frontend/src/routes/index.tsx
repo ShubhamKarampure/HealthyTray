@@ -8,8 +8,7 @@ const PatientMealTracking = lazy(() => import("@/pages/Manager/PatientMealTracki
 // Inner Pantry Pages
 const PantryDashboard = lazy(() => import("@/pages/Pantry/Dashboard"));
 const MealPreparation = lazy(() => import("@/pages/Pantry/MealPreparation"));
-const DeliveryPersonnel = lazy(() => import("@/pages/Pantry/DeliveryPersonnel"));
-const DeliveryStatus = lazy(() => import("@/pages/Pantry/DeliveryStatus"));
+const PatientMealPreparation = lazy(() => import("@/pages/Pantry/PatientPreparationTrack"));
 
 // Delivery Personnel Pages
 const DeliveryDashboard = lazy(() => import("@/pages/Delivery/Dashboard"));
@@ -44,7 +43,7 @@ const managerRoutes = [
     element: < MealManagement/>,
   },
   {
-    path: "/home/manager/meal",
+    path: "/home/manager/meals/:id",
     name: "Patient Meal Tracking",
     element: <PatientMealTracking />,
   }
@@ -62,15 +61,10 @@ const pantryRoutes = [
     element: <MealPreparation />,
   },
   {
-    path: "/home/pantry/delivery-personnel",
-    name: "Delivery Personnel Management",
-    element: <DeliveryPersonnel />,
-  },
-  {
-    path: "/home/pantry/delivery-status",
-    name: "Delivery Status Tracking",
-    element: <DeliveryStatus />,
-  },
+    path: "/home/pantry/meals/:id",
+    name: "Patient Meal Tracking",
+    element: <PatientMealPreparation/>,
+  }
 ];
 
 const deliveryRoutes = [
