@@ -43,7 +43,7 @@ model Patient {
 model DietPlan {
   id              String      @id @default(cuid()) @map("_id")
   patientId       String
-  patient         Patient     @relation(fields: [patientId], references: [id])
+  patient         Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade) 
   morningMeal     MealDetail? @relation("MorningMeal", fields: [morningMealId], references: [id])
   eveningMeal     MealDetail? @relation("EveningMeal", fields: [eveningMealId], references: [id])
   nightMeal       MealDetail? @relation("NightMeal", fields: [nightMealId], references: [id])
