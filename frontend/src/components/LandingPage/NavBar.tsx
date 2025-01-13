@@ -32,7 +32,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginOpen }) => {
           {/* Login button */}
           <button
             onClick={handleLoginClick}
-            className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+            className="bg-blue-400 text-white px-6 py-2 rounded-md hover:bg-blue-600"
           >
             Login
           </button>
